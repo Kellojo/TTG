@@ -34,6 +34,7 @@ namespace LazySquirrelLabs.TerracedTerrainGenerator.Controllers
 		#region Fields
 
 		private readonly CancellationTokenSource _cancellationTokenSource = new();
+		private MeshCollider _meshCollider;
 
 		#endregion
 
@@ -92,6 +93,8 @@ namespace LazySquirrelLabs.TerracedTerrainGenerator.Controllers
 			}
 
 			_meshFilter = meshFilter;
+			
+			_meshCollider = GetComponent<MeshCollider>();
 		}
 
 		#endregion
@@ -201,14 +204,24 @@ namespace LazySquirrelLabs.TerracedTerrainGenerator.Controllers
 			// Generate
 			var generator = GetGenerator(_maximumHeight, _relativeHeights, sculptSettings, _depth);
 			var previousMesh = Application.isPlaying ? _meshFilter.mesh : _meshFilter.sharedMesh;
-			_meshFilter.mesh = generator.GenerateTerrain();
+			var mesh = generator.GenerateTerrain();
+			if (Application.isPlaying) {
+				_meshFilter.mesh = mesh;
+			} else {
+				_meshFilter.sharedMesh = mesh;
+			}
+			
+            _meshCollider = GetComponent<MeshCollider>();
+			if (_meshCollider != null) {
+				_meshCollider.sharedMesh = mesh;
+			}
 
 			// Cleanup
 			if (previousMesh == null)
 			{
 				return;
 			}
-
+			
 			previousMesh.Clear();
 			if (Application.isPlaying) {
 				Destroy(previousMesh);
@@ -224,13 +237,24 @@ namespace LazySquirrelLabs.TerracedTerrainGenerator.Controllers
 			var internalToken = _cancellationTokenSource.Token;
 			var combinedSource = CancellationTokenSource.CreateLinkedTokenSource(internalToken, token);
 			var previousMesh = _meshFilter.mesh;
-			_meshFilter.mesh = await generator.GenerateTerrainAsync(combinedSource.Token);
-
+			var mesh = await generator.GenerateTerrainAsync(combinedSource.Token);
+			if (Application.isPlaying) {
+				_meshFilter.mesh = mesh;
+			} else {
+				_meshFilter.sharedMesh = mesh;
+			}
+			
+			_meshCollider = GetComponent<MeshCollider>();
+			if (_meshCollider != null) {
+				_meshCollider.sharedMesh = mesh;
+			}
 			// Cleanup
 			if (previousMesh == null)
 			{
 				return;
 			}
+			
+
 
 			previousMesh.Clear();
 			if (Application.isPlaying) {

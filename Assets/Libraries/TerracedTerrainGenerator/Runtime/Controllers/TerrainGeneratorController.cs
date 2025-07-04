@@ -200,7 +200,7 @@ namespace LazySquirrelLabs.TerracedTerrainGenerator.Controllers
 		{
 			// Generate
 			var generator = GetGenerator(_maximumHeight, _relativeHeights, sculptSettings, _depth);
-			var previousMesh = _meshFilter.mesh;
+			var previousMesh = Application.isPlaying ? _meshFilter.mesh : _meshFilter.sharedMesh;
 			_meshFilter.mesh = generator.GenerateTerrain();
 
 			// Cleanup
@@ -210,7 +210,11 @@ namespace LazySquirrelLabs.TerracedTerrainGenerator.Controllers
 			}
 
 			previousMesh.Clear();
-			Destroy(previousMesh);
+			if (Application.isPlaying) {
+				Destroy(previousMesh);
+			} else {
+				DestroyImmediate(previousMesh);
+			}
 		}
 
 		private async Task GenerateAsync(SculptSettings sculptSettings, CancellationToken token)
@@ -229,7 +233,12 @@ namespace LazySquirrelLabs.TerracedTerrainGenerator.Controllers
 			}
 
 			previousMesh.Clear();
-			Destroy(previousMesh);
+			if (Application.isPlaying) {
+				Destroy(previousMesh);
+			} else {
+				DestroyImmediate(previousMesh);
+			}
+
 		}
 
 		#endregion
